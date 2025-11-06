@@ -1,13 +1,10 @@
 import requests
 import json
 from datetime import datetime, timedelta
-import dotenv
-import os
+from flask import current_app
 
-dotenv.load_dotenv()
-
-NAVER_CLIENT_ID = os.getenv("NAVER_CLIENT_ID")
-NAVER_CLIENT_SECRET = os.getenv("NAVER_CLIENT_SECRET")
+NAVER_CLIENT_ID = current_app.config['NAVER_CLIENT_ID']
+NAVER_CLIENT_SECRET = current_app.config['NAVER_CLIENT_SECRET']
 
 NAVER_API_URL = "https://openapi.naver.com/v1/datalab/search"
 
@@ -103,10 +100,3 @@ def get_naver_mentions_24h(keyword):
                 break
 
     return {'naver_mentions_24h': total_count_24h}
-
-if __name__ == '__main__':
-    TEST_KEYWORD = "한로로"  # 테스트할 키워드
-    stats = get_naver_datalab_interest(TEST_KEYWORD)
-    stat2 = get_naver_mentions_24h(TEST_KEYWORD)
-    print(stats)
-    print(stat2)

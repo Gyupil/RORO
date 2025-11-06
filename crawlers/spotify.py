@@ -1,15 +1,10 @@
 import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
-import dotenv
-import os
+from flask import current_app
 
-dotenv.load_dotenv()
+CLIENT_ID = current_app.config['CLIENT_ID']
+CLIENT_SECRET = current_app.config['CLIENT_SECRET']
 
-# 1. 인증 정보 입력 (발급받은 키 입력)
-CLIENT_ID = os.getenv("CLIENT_ID")
-CLIENT_SECRET = os.getenv("CLIENT_SECRET")
-
-# 2. 인증 객체 생성
 auth_manager = SpotifyClientCredentials(client_id=CLIENT_ID, client_secret=CLIENT_SECRET)
 sp = spotipy.Spotify(auth_manager=auth_manager)
 
