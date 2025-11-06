@@ -1,16 +1,11 @@
 import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
-from flask import current_app
-
-CLIENT_ID = current_app.config['CLIENT_ID']
-CLIENT_SECRET = current_app.config['CLIENT_SECRET']
-
-auth_manager = SpotifyClientCredentials(client_id=CLIENT_ID, client_secret=CLIENT_SECRET)
-sp = spotipy.Spotify(auth_manager=auth_manager)
 
 ARTIST_URI = 'spotify:artist:5wVJpXzuKV6Xj7Yhsf2uYx'
 
-def load_basic_info():
+def load_basic_info(CLIENT_ID, CLIENT_SECRET):
+    auth_manager = SpotifyClientCredentials(client_id=CLIENT_ID, client_secret=CLIENT_SECRET)
+    sp = spotipy.Spotify(auth_manager=auth_manager)
     artist_info = sp.artist(ARTIST_URI)
 
     artist_name = artist_info['name']
@@ -19,7 +14,9 @@ def load_basic_info():
 
     return {"Name": artist_name, "Followers": followers, "Popularity": popularity}
 
-def _count_tracks():
+def _count_tracks(CLIENT_ID, CLIENT_SECRET):
+    auth_manager = SpotifyClientCredentials(client_id=CLIENT_ID, client_secret=CLIENT_SECRET)
+    sp = spotipy.Spotify(auth_manager=auth_manager)
     artist_name = sp.artist(ARTIST_URI)['name']
     print(f"'{artist_name}' 아티스트의 총 곡 수 계산을 시작합니다. (시간이 오래 걸릴 수 있습니다...)")
 
@@ -69,7 +66,9 @@ def _count_tracks():
         offset += limit
     return len(unique_track_ids)
 
-def load_tracks():
+def load_tracks(CLIENT_ID, CLIENT_SECRET):
+    auth_manager = SpotifyClientCredentials(client_id=CLIENT_ID, client_secret=CLIENT_SECRET)
+    sp = spotipy.Spotify(auth_manager=auth_manager)
     query = "artist:HANRORO"
     search_result = sp.search(q=query, type='track', limit=40)
 

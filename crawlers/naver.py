@@ -1,14 +1,10 @@
 import requests
 import json
 from datetime import datetime, timedelta
-from flask import current_app
-
-NAVER_CLIENT_ID = current_app.config['NAVER_CLIENT_ID']
-NAVER_CLIENT_SECRET = current_app.config['NAVER_CLIENT_SECRET']
 
 NAVER_API_URL = "https://openapi.naver.com/v1/datalab/search"
 
-def get_naver_datalab_interest(keyword):
+def get_naver_datalab_interest(keyword, NAVER_CLIENT_ID, NAVER_CLIENT_SECRET):
     HEADERS = {
         "X-Naver-Client-Id": NAVER_CLIENT_ID,
         "X-Naver-Client-Secret": NAVER_CLIENT_SECRET,
@@ -51,7 +47,7 @@ def get_naver_datalab_interest(keyword):
     return {'naver_datalab_daily_ratio': yesterday_ratio}
 
 
-def get_naver_mentions_24h(keyword):
+def get_naver_mentions_24h(keyword, NAVER_CLIENT_ID, NAVER_CLIENT_SECRET):
     NAVER_API_URL_BLOG = "https://openapi.naver.com/v1/search/blog.json"
     NAVER_API_URL_CAFE = "https://openapi.naver.com/v1/search/cafearticle.json"
     HEADERS = {
