@@ -19,7 +19,26 @@ W_BUZZ_MENTIONS = 0.20
 W_TOTAL_BUZZ_INDEX = 0.70
 W_TOTAL_FANDOM_INDEX = 0.30
 
-def calculate_total_index(raw_data):
+def calculate_total_index():
+    spotify_client_id = current_app.config['CLIENT_ID']
+    spotify_client_secret = current_app.config['CLIENT_SECRET']
+    naver_client_id = current_app.config['NAVER_CLIENT_ID']
+    naver_client_secret = current_app.config['NAVER_CLIENT_SECRET']
+
+    naver_mentions = get_naver_mentions_24h("한로로", naver_client_id, naver_client_secret)
+    dc_mentions = get_dcinside_mentions_24h()
+    naver_datalab = get_naver_datalab_interest("한로로", naver_client_id, naver_client_secret)
+    spotify_artist = load_basic_info(spotify_client_id, spotify_client_secret)
+    spotify_songs = load_tracks(spotify_client_id, spotify_client_secret)
+
+    raw_data = {
+        "naver_mentions": naver_mentions,
+        "dc_mentions": dc_mentions,
+        "spotify_artist": spotify_artist,
+        "spotify_songs": spotify_songs,
+        "naver_datalab": naver_datalab
+    }
+
     naver_mentions = raw_data['naver_mentions'].get('naver_mentions_24h', 0)
     dc_mentions = raw_data['dc_mentions'].get('dc_mentions_24h', 0)
     total_mentions_24h = naver_mentions + dc_mentions
@@ -76,44 +95,3 @@ def calculate_total_index(raw_data):
 
     return results
 
-def save_current_roro_score():
-    spotify_client_id = current_app.config['CLIENT_ID']
-    spotify_client_secret = current_app.config['CLIENT_SECRET']
-    naver_client_id = current_app.config['NAVER_CLIENT_ID']
-    naver_client_secret = current_app.config['NAVER_CLIENT_SECRET']
-    try:
-        naver_mentions = get_naver_mentions_24h("한로로", naver_client_id, naver_client_secret)
-        dc_mentions = get_dcinside_mentions_24h()
-        naver_datalab = get_naver_datalab_interest("한로로", naver_client_id, naver_client_secret)
-        spotify_artist = load_basic_info(spotify_client_id, spotify_client_secret)
-        spotify_songs = load_tracks(spotify_client_id, spotify_client_secret)
-
-        data = {
-            "naver_mentions": naver_mentions,
-            "dc_mentions": dc_mentions,
-            "spotify_artist": spotify_artist,
-            "spotify_songs": spotify_songs,
-            "naver_datalab": naver_datalab
-        }
-
-        # 1. 점수 계산
-        score = calculate_total_index(data)
-
-        # 2. RoroScore 객체 생성
-        new_score_entry = RoroScore(
-            timestamp=datetime.utcnow(),
-            total_index=score['total_index'],
-            buzz_index=score['buzz_index'],
-            fandom_index=score['fandom_index'],
-            details=score['details']
-        )
-
-        # 3. DB 세션에 추가 및 커밋 (저장)
-        db.session.add(new_score_entry)
-        db.session.commit()
-
-        print(f"[{datetime.now()}] 성공: Total Index {score['total_index']}를 DB에 저장했습니다.")
-
-    except Exception as e:
-        db.session.rollback()
-        print(f"[{datetime.now()}] 오류: DB 저장 실패 - {e}")
