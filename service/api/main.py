@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
-
 from service.api import services, schema
 from service.core.database import get_db, engine, Base
 
@@ -19,15 +19,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.get("/")
-def read_root():
-    return {"Hello": "Roro API"}
-
+@app.get("/", include_in_schema=False)
+async def serve_html_file():
+    return FileResponse("big_roro.html", media_type="text/html")
 
 @app.get("/api/v1/index/snapshot", response_model=schema.IndexSnapshotResponse)
 def get_current_snapshot(db: Session = Depends(get_db)):
     return services.get_snapshot_data(db=db)
-
 
 @app.get("/api/v1/index/trend", response_model=schema.IndexTrendResponse)
 def get_index_trends(days: int = 30, db: Session = Depends(get_db)):

@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RORO</title>
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #F8F9FA;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+        .dashboard-container {
+            max-width: 800px;
+            margin: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+        .card {
+            background-color: #FFFFFF;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s ease-in-out;
+        }
+        h2, h3 {
+            margin-top: 0;
+            margin-bottom: 12px;
+        }
+        .total-index-card {
+            text-align: center;
+            border: 2px solid #69D2E7;
+        }
+        .total-index-value {
+            font-size: 48px;
+            font-weight: 700;
+            color: #333;
+            line-height: 1.2;
+        }
+        .total-index-change {
+            font-size: 18px;
+            font-weight: 700;
+        }
+        .positive { color: #00BFA6; }
+        .negative { color: #FF8A65; }
+        .indices-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        .index-card h3 {
+            font-size: 18px;
+            color: #555;
+        }
+        .index-card .value {
+            font-size: 28px;
+            font-weight: 700;
+        }
+        .index-change {
+            font-size: 16px;
+            font-weight: 700;
+            margin-top: 4px;
+        }
+        .performance { color: #00BFA6; }
+        .fandom { color: #4285F4; }
+        .buzz { color: #FFA726; }
+        .trend-card {
+            padding-bottom: 12px;
+        }
+        .timeframe-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .timeframe-buttons button {
+            font-family: 'Noto Sans KR', sans-serif;
+            font-size: 14px;
+            padding: 8px 16px;
+            border: 1px solid #DDD;
+            border-radius: 20px;
+            background-color: #FFF;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .timeframe-buttons button:hover {
+            background-color: #f4f4f4;
+        }
+        .timeframe-buttons button.active {
+            background-color: #69D2E7;
+            color: white;
+            border-color: #69D2E7;
+            font-weight: 700;
+        }
+        #chart {
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="dashboard-container">
+
+        <h2>대 로 로의 인기는 언제나 우상향 📈</h2>
+
+        <div class="card total-index-card">
+            <h3>Total RORO</h3>
+            <div id="total-index-value" class="total-index-value">...</div>
+            <div id="total-index-change" class="total-index-change positive">...</div>
+        </div>
+
+        <div class="indices-grid">
+            <div class="card index-card">
+                <h3>Performance RORO</h3>
+                <div id="performance-index-value" class="value performance">...</div>
+                <div id="performance-index-change" class="index-change positive">...</div>
+            </div>
+            <div class="card index-card">
+                <h3>Fandom RORO</h3>
+                <div id="fandom-index-value" class="value fandom">...</div>
+                <div id="fandom-index-change" class="index-change positive">...</div>
+            </div>
+            <div class="card index-card">
+                <h3>Buzz RORO</h3>
+                <div id="buzz-index-value" class="value buzz">...</div>
+                <div id="buzz-index-change" class="index-change positive">...</div>
+            </div>
+        </div>
+
+        <h2>Chart</h2>
+
+        <div class="card trend-card">
+            <div class="timeframe-buttons">
+                <button data-days="1">24시간</button>
+                <button data-days="7">7일</button>
+                <button data-days="30" class="active">30일</button>
+                <button data-days="9999">전체</button>
+            </div>
+            <div id="chart"></div>
+        </div>
+
+    </div>
+
+    <script>
+        const API_BASE_URL = "http://127.0.0.1:8000/api/v1/index";
+        let chartInstance = null;
+        let currentChartDays = 30;
+
+        function applyChange(elementId, changeValue) {
+            const el = document.getElementById(elementId);
+            if (!el) return;
+            const sign = changeValue >= 0 ? '▲' : '▼';
+            const className = changeValue >= 0 ? 'positive' : 'negative';
+            const baseClass = el.id.startsWith('total') ? 'total-index-change' : 'index-change';
+            el.textContent = `${sign} ${Math.abs(changeValue).toFixed(2)}`;
+            el.className = `${baseClass} ${className}`;
+        }
+
+        async function updateSnapshot() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/snapshot`);
+                if (!response.ok) throw new Error('Snapshot API 호출 실패');
+
+                const data = await response.json();
+
+                document.getElementById('total-index-value').textContent = data.total_index.toFixed(2);
+                applyChange('total-index-change', data.total_index_change_24h);
+
+                document.getElementById('performance-index-value').textContent = data.performance_index.toFixed(2);
+                applyChange('performance-index-change', data.performance_index_change_24h);
+
+                document.getElementById('fandom-index-value').textContent = data.fandom_index.toFixed(2);
+                applyChange('fandom-index-change', data.fandom_index_change_24h);
+
+                document.getElementById('buzz-index-value').textContent = data.buzz_index.toFixed(2);
+                applyChange('buzz-index-change', data.buzz_index_change_24h);
+
+            } catch (error) {
+                console.error("스냅샷 업데이트 실패:", error);
+                document.getElementById('total-index-value').textContent = "오류";
+            }
+        }
+
+        async function renderChart(days = 30) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/trend?days=${days}`);
+                if (!response.ok) throw new Error('Trend API 호출 실패');
+
+                const data = await response.json();
+                const chartElement = document.getElementById("chart");
+
+                if (!data.categories || data.categories.length === 0) {
+                    chartElement.innerHTML = "<p style='text-align:center;'>아직 표시할 데이터가 없습니다.</p>";
+                    if (chartInstance) {
+                        chartInstance.destroy();
+                        chartInstance = null;
+                    }
+                    return;
+                }
+
+                var options = {
+                    chart: {
+                        type: 'line',
+                        height: 350,
+                        stacked: false,
+                        toolbar: { show: false },
+                        zoom: { enabled: false },
+                    },
+                    series: [
+                        { name: ' Fandom RORO', data: data.fandom_data },
+                        { name: ' Buzz RORO', data: data.buzz_data },
+                        { name: ' Performance RORO', data: data.performance_data },
+                    ],
+                    xaxis: {
+                        categories: data.categories,
+                        tooltip: { enabled: false },
+                        labels: {
+                            rotate: 0,
+                            hideOverlappingLabels: true,
+                            trim: true
+                        },
+                        tickAmount: 10
+                    },
+                    yaxis: {
+                        labels: {
+                            formatter: (value) => { return value ? value.toFixed(0) + "점" : "0점" }
+                        }
+                    },
+                    colors: ['#4285F4', '#FFA726', '#00BFA6'],
+                    stroke: { curve: 'smooth', width: 2 },
+                    dataLabels: { enabled: false },
+                    tooltip: {
+                        theme: 'light',
+                        x: { show: true }
+                    },
+                    legend: { position: 'top', horizontalAlign: 'left', markers: { radius: 12 } },
+                };
+
+                if (!chartInstance) {
+                    chartElement.innerHTML = "";
+                    chartInstance = new ApexCharts(chartElement, options);
+                    chartInstance.render();
+                } else {
+                    chartInstance.updateOptions(options);
+                }
+
+            } catch (error) {
+                console.error("차트 렌더링 실패:", error);
+                document.getElementById("chart").innerHTML = "<p style='text-align:center;'>차트 로딩 중 오류 발생</p>";
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            async function updateBaseData() {
+                console.log("Fetching new base data...");
+                await updateSnapshot();
+                await renderChart(currentChartDays);
+            }
+
+            updateBaseData();
+
+            setInterval(updateBaseData, 10000);
+
+            const timeframeButtons = document.querySelectorAll('.timeframe-buttons button');
+
+            timeframeButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    timeframeButtons.forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+
+                    currentChartDays = parseInt(button.dataset.days, 10);
+
+                    renderChart(currentChartDays);
+                });
+            });
+        });
+
+    </script>
+</body>
+</html>

@@ -1,7 +1,7 @@
 from service.crawlers.dc_inside import get_dcinside_mentions_24h
 from service.crawlers.spotify import load_basic_info
 from service.crawlers.spotify import load_tracks
-from service.crawlers.spotify import load_playlist
+from service.crawlers.spotify import load_spotify
 from service.crawlers.naver import get_naver_mentions_24h
 from service.crawlers.naver import get_naver_datalab_interest
 from flask import current_app
@@ -47,7 +47,7 @@ def calculate_total_index():
     naver_datalab = get_naver_datalab_interest("한로로", naver_client_id, naver_client_secret)
     spotify_artist = load_basic_info(spotify_client_id, spotify_client_secret)
     spotify_songs = load_tracks(spotify_client_id, spotify_client_secret)
-    chart_data = load_playlist(spotify_client_id, spotify_client_secret)
+    chart_data = load_spotify(spotify_client_id, spotify_client_secret)
 
     raw_data = {
         "naver_mentions": naver_mentions,
@@ -123,4 +123,3 @@ def calculate_total_index():
         }
     }
     return results
-

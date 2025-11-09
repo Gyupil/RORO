@@ -104,4 +104,24 @@ def load_playlist(CLIENT_ID, CLIENT_SECRET):
 
     return result
 
-load_playlist(Config.CLIENT_ID, Config.CLIENT_SECRET)
+def load_spotify(CLIENT_ID, CLIENT_SECRET):
+    auth_manager = SpotifyClientCredentials(client_id=CLIENT_ID, client_secret=CLIENT_SECRET)
+    sp = spotipy.Spotify(auth_manager=auth_manager)
+    SYNC_PLAYLIST_ID = "5jT64Fys6sst1oU5P4Q5xS"
+
+    search_result = sp.playlist(SYNC_PLAYLIST_ID)['tracks']['items']
+
+    result = []
+
+    ranking = 1
+    for track in search_result:
+        artist_name = track['track']['artists'][0]['name']
+        if artist_name == 'HANRORO':
+            result.append({'name': artist_name, 'rank': ranking})
+        ranking += 1
+
+    melon_result = load_playlist(CLIENT_ID, CLIENT_SECRET)
+    for track in melon_result:
+        result.append(track)
+
+    return result
