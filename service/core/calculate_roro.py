@@ -4,7 +4,10 @@ from service.crawlers.spotify import load_tracks
 from service.crawlers.spotify import load_spotify
 from service.crawlers.naver import get_naver_mentions_24h
 from service.crawlers.naver import get_naver_datalab_interest
-from config import Config
+import os
+import dotenv
+
+dotenv.load_dotenv()
 
 MAX_PERFORMANCE_SCORE = 30000
 
@@ -32,14 +35,10 @@ def calculate_performance_score(chart_songs):
     return total_performance_score
 
 def calculate_total_index():
-    spotify_client_id = Config.CLIENT_ID
-    spotify_client_secret = Config.CLIENT_SECRET
-    naver_client_id = Config.NAVER_CLIENT_ID
-    naver_client_secret = Config.NAVER_CLIENT_SECRET
-    # spotify_client_id = current_app.config['CLIENT_ID']
-    # spotify_client_secret = current_app.config['CLIENT_SECRET']
-    # naver_client_id = current_app.config['NAVER_CLIENT_ID']
-    # naver_client_secret = current_app.config['NAVER_CLIENT_SECRET']
+    spotify_client_id = os.getenv("CLIENT_ID")
+    spotify_client_secret = os.getenv("CLIENT_SECRET")
+    naver_client_id = os.getenv("NAVER_CLIENT_ID")
+    naver_client_secret = os.getenv("NAVER_CLIENT_SECRET")
 
     naver_mentions = get_naver_mentions_24h("한로로", naver_client_id, naver_client_secret)
     dc_mentions = get_dcinside_mentions_24h()

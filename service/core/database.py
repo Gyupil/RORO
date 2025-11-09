@@ -1,9 +1,12 @@
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-from config import Config
+import dotenv
+import os
 
-DATABASE_URL = Config.DB_URL
+dotenv.load_dotenv()
+
+DATABASE_URL = os.getenv('DATABASE_URL')
 
 engine_args = {}
 
