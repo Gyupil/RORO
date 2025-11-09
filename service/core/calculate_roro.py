@@ -4,7 +4,6 @@ from service.crawlers.spotify import load_tracks
 from service.crawlers.spotify import load_spotify
 from service.crawlers.naver import get_naver_mentions_24h
 from service.crawlers.naver import get_naver_datalab_interest
-from flask import current_app
 from config import Config
 
 MAX_PERFORMANCE_SCORE = 30000

@@ -1,8 +1,6 @@
-# scheduler.py
 import time
 from apscheduler.schedulers.blocking import BlockingScheduler
 from sqlalchemy.orm import Session
-
 from service.core.database import SessionLocal, engine, Base
 from service.core.models import IndexLog
 from service.core.calculate_roro import calculate_total_index
@@ -34,7 +32,6 @@ def run_calculation_job():
         jittered_buzz = buzz + buzz_noise
         jittered_total = (jittered_perf * W_PERF) + (jittered_fand * W_FANDOM) + (jittered_buzz * W_BUZZ)
 
-        # 3. DB에 모델 객체로 저장
         new_log = IndexLog(
             total_index=jittered_total,
             performance_index=jittered_perf,
@@ -55,14 +52,11 @@ def run_calculation_job():
 
 
 if __name__ == "__main__":
-    # (테이블이 없다면) DB 테이블 생성
     Base.metadata.create_all(bind=engine)
 
-    # 1시간마다 run_calculation_job 실행
     scheduler = BlockingScheduler(timezone='Asia/Seoul')
     scheduler.add_job(run_calculation_job, 'interval', hours=0.003, jitter=120)
 
-    # 테스트를 위해 즉시 1회 실초
     run_calculation_job()
 
     print("스케줄러 시작... (10초마다 지수 계산 실행)")

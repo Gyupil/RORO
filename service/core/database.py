@@ -3,7 +3,6 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from config import Config
 
-# DATABASE_URL = "sqlite:///./roro_data.db" # 예시 (Config.DB_URL 사용)
 DATABASE_URL = Config.DB_URL
 
 engine_args = {}

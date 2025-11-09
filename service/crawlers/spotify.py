@@ -1,7 +1,5 @@
 import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
-from config import Config
-import pprint
 
 ARTIST_URI = 'spotify:artist:5wVJpXzuKV6Xj7Yhsf2uYx'
 

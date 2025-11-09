@@ -1,10 +1,6 @@
-# api/schemas.py
 from pydantic import BaseModel
-from typing import List, Optional
-from datetime import datetime
+from typing import List
 
-
-# --- 스냅샷 응답용 스키마 ---
 class IndexSnapshotResponse(BaseModel):
     total_index: float
     total_index_change_24h: float
@@ -16,7 +12,6 @@ class IndexSnapshotResponse(BaseModel):
     buzz_index_change_24h: float
 
 
-# --- 트렌드 차트 응답용 스키마 ---
 class IndexTrendResponse(BaseModel):
     categories: List[str]  # X축 (날짜)
     performance_data: List[float]  # 성과 지수 시리즈
