@@ -99,12 +99,12 @@ def calculate_total_index():
 
     print(total_index)
     results = {
-        "total_index": round(total_index, 2),
+        "total_index": round(total_index*100, 2),
         "details": {
             "indices": {
-                "performance_index": round(performance_index, 2),
-                "fandom_index": round(fandom_index, 2),
-                "buzz_index": round(buzz_index, 2)
+                "performance_index": round(performance_index*100, 2),
+                "fandom_index": round(fandom_index*100, 2),
+                "buzz_index": round(buzz_index*100, 2)
             },
             "preprocessed": {
                 "total_mentions_24h": total_mentions_24h,
