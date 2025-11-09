@@ -36,6 +36,6 @@
 
 이 서비스는 **[Render.com](https://render.com/)**의 Web Service와 Managed PostgreSQL을 통해 배포되었습니다.
 
-* **배포 URL:** `https://roro-3kk8.onrender.com` (이 부분은 실제 Render URL로 수정해 주세요)
+* **배포 URL:** `https://roro-3kk8.onrender.com`
 
 ---
