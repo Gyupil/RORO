@@ -16,7 +16,7 @@ def get_snapshot_data(db: Session) -> IndexSnapshotResponse:
             buzz_index=0, buzz_index_change_24h=0
         )
 
-    time_24h_ago = latest_log.created_at - timedelta(days=1)
+    time_24h_ago = latest_log.created_at - timedelta(hours=0.2)
     prev_log = db.query(IndexLog) \
         .filter(IndexLog.created_at <= time_24h_ago) \
         .order_by(desc(IndexLog.created_at)) \
