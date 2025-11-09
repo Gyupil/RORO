@@ -23,9 +23,9 @@ def run_calculation_job():
         W_FANDOM = 0.35
         W_BUZZ = 0.25
 
-        perf_noise = (random.random() - 0.5) * 2 * (perf * JITTER_RATIO)
-        fand_noise = (random.random() - 0.5) * 2 * (fand * JITTER_RATIO)
-        buzz_noise = (random.random() - 0.5) * 2 * (buzz * JITTER_RATIO)
+        perf_noise = (random.random() - 0.35) * 2 * (perf * JITTER_RATIO)
+        fand_noise = (random.random() - 0.35) * 2 * (fand * JITTER_RATIO)
+        buzz_noise = (random.random() - 0.35) * 2 * (buzz * JITTER_RATIO)
 
         jittered_perf = perf + perf_noise
         jittered_fand = fand + fand_noise
@@ -55,9 +55,9 @@ if __name__ == "__main__":
     Base.metadata.create_all(bind=engine)
 
     scheduler = BlockingScheduler(timezone='Asia/Seoul')
-    scheduler.add_job(run_calculation_job, 'interval', hours=0.003, jitter=120)
+    scheduler.add_job(run_calculation_job, 'interval', hours=0.2, jitter=120)
 
     run_calculation_job()
 
-    print("스케줄러 시작... (10초마다 지수 계산 실행)")
+    print("스케줄러 시작... (12분마다 지수 계산 실행)")
     scheduler.start()
