@@ -1,35 +1,53 @@
 from service.crawlers.dc_inside import get_dcinside_mentions_24h
 from service.crawlers.spotify import load_basic_info
 from service.crawlers.spotify import load_tracks
+from service.crawlers.spotify import load_playlist
 from service.crawlers.naver import get_naver_mentions_24h
 from service.crawlers.naver import get_naver_datalab_interest
-from app import db
-from app.models import RoroScore
-from datetime import datetime
 from flask import current_app
+from config import Config
+
+MAX_PERFORMANCE_SCORE = 30000
 
 MAX_MENTIONS_24H = 1000
 MAX_FOLLOWERS = 1000000
 
-W_BUZZ_SPOTIFY_ARTIST = 0.25
-W_BUZZ_SPOTIFY_SONGS = 0.25
-W_BUZZ_NAVER_DATALAB = 0.30
-W_BUZZ_MENTIONS = 0.20
+W_BUZZ_SPOTIFY_ARTIST = 0.35
+W_BUZZ_SPOTIFY_SONGS = 0.30
+W_BUZZ_NAVER_DATALAB = 0.25
+W_BUZZ_MENTIONS = 0.10
 
-W_TOTAL_BUZZ_INDEX = 0.70
-W_TOTAL_FANDOM_INDEX = 0.30
+W_TOTAL_PERFORMANCE_INDEX = 0.40
+W_TOTAL_FANDOM_INDEX      = 0.35
+W_TOTAL_BUZZ_INDEX        = 0.25
+
+def calculate_performance_score(chart_songs):
+    total_performance_score = 0
+    if not chart_songs:
+        return 0
+    for song in chart_songs:
+        rank = song.get('rank', 101)
+        if 1 <= rank <= 100:
+            score = (101 - rank) ** 2
+            total_performance_score += score
+    return total_performance_score
 
 def calculate_total_index():
-    spotify_client_id = current_app.config['CLIENT_ID']
-    spotify_client_secret = current_app.config['CLIENT_SECRET']
-    naver_client_id = current_app.config['NAVER_CLIENT_ID']
-    naver_client_secret = current_app.config['NAVER_CLIENT_SECRET']
+    spotify_client_id = Config.CLIENT_ID
+    spotify_client_secret = Config.CLIENT_SECRET
+    naver_client_id = Config.NAVER_CLIENT_ID
+    naver_client_secret = Config.NAVER_CLIENT_SECRET
+    # spotify_client_id = current_app.config['CLIENT_ID']
+    # spotify_client_secret = current_app.config['CLIENT_SECRET']
+    # naver_client_id = current_app.config['NAVER_CLIENT_ID']
+    # naver_client_secret = current_app.config['NAVER_CLIENT_SECRET']
 
     naver_mentions = get_naver_mentions_24h("한로로", naver_client_id, naver_client_secret)
     dc_mentions = get_dcinside_mentions_24h()
     naver_datalab = get_naver_datalab_interest("한로로", naver_client_id, naver_client_secret)
     spotify_artist = load_basic_info(spotify_client_id, spotify_client_secret)
     spotify_songs = load_tracks(spotify_client_id, spotify_client_secret)
+    chart_data = load_playlist(spotify_client_id, spotify_client_secret)
 
     raw_data = {
         "naver_mentions": naver_mentions,
@@ -57,9 +75,10 @@ def calculate_total_index():
     spotify_followers = raw_data['spotify_artist'].get('Followers', 0)
 
     print("[Calculator] 2단계: 정규화(Normalization) 시작...")
-    norm_mentions = min((total_mentions_24h / MAX_MENTIONS_24H) * 100, 100)
     norm_followers = min((spotify_followers / MAX_FOLLOWERS) * 100, 100)
+    fandom_index = norm_followers
 
+    norm_mentions = min((total_mentions_24h / MAX_MENTIONS_24H) * 100, 100)
     buzz_index = (
             (spotify_artist_pop * W_BUZZ_SPOTIFY_ARTIST) +
             (spotify_top5_avg_pop * W_BUZZ_SPOTIFY_SONGS) +
@@ -67,31 +86,41 @@ def calculate_total_index():
             (norm_mentions * W_BUZZ_MENTIONS)
     )
 
-    fandom_index = norm_followers
+    total_performance_score = calculate_performance_score(chart_data)
+    norm_performance = min((total_performance_score / MAX_PERFORMANCE_SCORE) * 100, 100)
+    performance_index = norm_performance
 
+    # 4단계: 최종 종합 지수 계산
     total_index = (
-            (buzz_index * W_TOTAL_BUZZ_INDEX) +
-            (fandom_index * W_TOTAL_FANDOM_INDEX)
+            (performance_index * W_TOTAL_PERFORMANCE_INDEX) +
+            (fandom_index * W_TOTAL_FANDOM_INDEX) +
+            (buzz_index * W_TOTAL_BUZZ_INDEX)
     )
 
+    print(total_index)
     results = {
         "total_index": round(total_index, 2),
-        "buzz_index": round(buzz_index, 2),
-        "fandom_index": round(fandom_index, 2),
         "details": {
+            "indices": {
+                "performance_index": round(performance_index, 2),
+                "fandom_index": round(fandom_index, 2),
+                "buzz_index": round(buzz_index, 2)
+            },
             "preprocessed": {
                 "total_mentions_24h": total_mentions_24h,
                 "naver_datalab_ratio": round(naver_datalab_ratio, 2),
                 "spotify_artist_pop": spotify_artist_pop,
                 "spotify_top5_avg_pop": round(spotify_top5_avg_pop, 2),
-                "spotify_followers": spotify_followers
+                "spotify_followers": spotify_followers,
+                "total_performance_score": total_performance_score,
+                "chart_songs_count": len(chart_data)
             },
             "normalized": {
                 "norm_mentions_score": round(norm_mentions, 2),
-                "norm_followers_score": round(fandom_index, 2)
+                "norm_followers_score": round(fandom_index, 2),
+                "norm_performance_score": round(norm_performance, 2)
             }
         }
     }
-
     return results
 

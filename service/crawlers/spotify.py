@@ -1,5 +1,7 @@
 import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
+from config import Config
+import pprint
 
 ARTIST_URI = 'spotify:artist:5wVJpXzuKV6Xj7Yhsf2uYx'
 
@@ -84,3 +86,22 @@ def load_tracks(CLIENT_ID, CLIENT_SECRET):
     result.sort(key=lambda x: x[1], reverse=True)
 
     return result
+
+def load_playlist(CLIENT_ID, CLIENT_SECRET):
+    auth_manager = SpotifyClientCredentials(client_id=CLIENT_ID, client_secret=CLIENT_SECRET)
+    sp = spotipy.Spotify(auth_manager=auth_manager)
+    MELON_HOT_100_ID = "4cRo44TavIHN54w46OqRVc"
+    search_result = sp.playlist(MELON_HOT_100_ID)['tracks']['items']
+
+    result = []
+
+    ranking = 1
+    for track in search_result:
+        artist_name = track['track']['artists'][0]['name']
+        if artist_name == 'HANRORO':
+            result.append({'name': artist_name, 'rank': ranking})
+        ranking += 1
+
+    return result
+
+load_playlist(Config.CLIENT_ID, Config.CLIENT_SECRET)
